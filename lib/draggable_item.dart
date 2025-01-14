@@ -29,20 +29,12 @@ class _ResizableDraggableItemState extends State<ResizableDraggableItem> {
       case 'image':
         return Image.file(
           File(widget.filePath),
-          width: 150,
-          height: 150,
           fit: BoxFit.cover,
         );
       case 'video':
         return Container(
-          width: 150,
-          height: 150,
-          color: Colors.black,
-          child: Center(
-            child: VideoPlayerView(
-              url: widget.filePath,
-            ),
-          ),
+          color: Colors.indigo,
+          child: Center(child: Text('helloooooooo')),
         );
       default:
         return const SizedBox.shrink();
