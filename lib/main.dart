@@ -1,4 +1,5 @@
 import 'package:content_managment_app_test/canvas_selection.dart';
+import 'package:content_managment_app_test/client_screen.dart';
 import 'package:content_managment_app_test/home.dart';
 
 import 'package:content_managment_app_test/logic/home_cubit.dart';
@@ -19,8 +20,8 @@ class MainApp extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => ContentCubit()),
       ],
-      child: MaterialApp(
-        home: Scaffold(body: ContentManagementApp()),
+      child: const MaterialApp(
+        home: Scaffold(body: ClientScreen()),
       ),
     );
   }
