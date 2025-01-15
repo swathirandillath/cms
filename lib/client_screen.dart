@@ -1,10 +1,10 @@
+import 'package:content_managment_app_test/movable_widget.dart';
+import 'package:content_managment_app_test/scan_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-
-
 
 class ClientScreen extends StatefulWidget {
   const ClientScreen({Key? key}) : super(key: key);
@@ -55,6 +55,20 @@ class _ClientScreenState extends State<ClientScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: Drawer(
+        child: InkWell(
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ScanScreen(
+                            ontap: (barcodeCapture) {
+                              scanQRCode(barcodeCapture);
+                            },
+                          )));
+            },
+            child: const Center(child: Text('Scan'))),
+      ),
       appBar: AppBar(title: const Text('Client App')),
       body: Center(
         child: Column(
@@ -62,24 +76,11 @@ class _ClientScreenState extends State<ClientScreen> {
           children: [
             // QR code scanner button or scanner view
             serverUrl.isEmpty
-                ? Column(
-                    children: [
-                      const Text(
-                        'Scan QR Code from the Host App',
-                        style: TextStyle(fontSize: 18),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        height: 100,
-                        width: 200,
-                        child: MobileScanner(
-                          onDetect: (BarcodeCapture barcodeCapture) {
-                            scanQRCode(barcodeCapture); // Handle the scanned QR code
-                          },
-                        ),
-                      ),
-                    ],
-                  )
+                ? InkWell(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => MovableResizableInsideParent()));
+                    },
+                    child: const Text('Create Program'))
                 : Column(
                     children: [
                       Text(
