@@ -1,8 +1,9 @@
+import 'dart:convert';
+
 import 'package:content_managment_app_test/movable_widget.dart';
 import 'package:content_managment_app_test/scan_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -26,6 +27,8 @@ class _ClientScreenState extends State<ClientScreen> {
         this.message = message;
       });
     });
+
+    //  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const ClientScreen()));
   }
 
   // Handle QR code scan
@@ -52,6 +55,21 @@ class _ClientScreenState extends State<ClientScreen> {
     super.dispose();
   }
 
+  void sendStackedWidget() {
+    // Example stacked items (you can dynamically create this)
+    final stackedItems = [
+      StackedItem(x: 50, y: 50, width: 100, height: 100, color: '0xFF0000FF'), // Blue
+      StackedItem(x: 100, y: 150, width: 120, height: 120, color: '0xFFFF0000'), // Red
+    ];
+
+    // Serialize the list of items to JSON
+    final jsonList = stackedItems.map((item) => item.toJson()).toList();
+    final jsonString = jsonEncode(jsonList);
+
+    // Send the JSON string through the WebSocket channel
+    channel.sink.add(jsonString);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,17 +88,29 @@ class _ClientScreenState extends State<ClientScreen> {
             child: const Center(child: Text('Scan'))),
       ),
       appBar: AppBar(title: const Text('Client App')),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            InkWell(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => MovableResizableInsideParent(
+                                onTap: (jsonString) {
+                                  setState(() {
+                                    channel.sink.add(jsonString);
+                                  });
+                                },
+                              )));
+                },
+                child: const Text('Create Program')),
             // QR code scanner button or scanner view
             serverUrl.isEmpty
-                ? InkWell(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => MovableResizableInsideParent()));
-                    },
-                    child: const Text('Create Program'))
+                ? const SizedBox.shrink()
                 : Column(
                     children: [
                       Text(
@@ -101,7 +131,7 @@ class _ClientScreenState extends State<ClientScreen> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          sendMessage(message);
+                          sendStackedWidget();
                         },
                         child: const Text('Send Message'),
                       ),
@@ -115,6 +145,44 @@ class _ClientScreenState extends State<ClientScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class StackedItem {
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+  final String color; // Hexadecimal color code
+
+  StackedItem({
+    required this.x,
+    required this.y,
+    required this.width,
+    required this.height,
+    required this.color,
+  });
+
+  // Convert to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'x': x,
+      'y': y,
+      'width': width,
+      'height': height,
+      'color': color,
+    };
+  }
+
+  // Create from JSON
+  factory StackedItem.fromJson(Map<String, dynamic> json) {
+    return StackedItem(
+      x: json['x'],
+      y: json['y'],
+      width: json['width'],
+      height: json['height'],
+      color: json['color'],
     );
   }
 }

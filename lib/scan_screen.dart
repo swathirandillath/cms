@@ -31,6 +31,7 @@ class _ScanScreenState extends State<ScanScreen> {
               width: 200,
               child: MobileScanner(
                 onDetect: (BarcodeCapture barcodeCapture) {
+                  print('inside on detect');
                   widget.ontap(barcodeCapture); // Handle the scanned QR code
                 },
               ),

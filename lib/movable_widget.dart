@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 
 class MovableResizableInsideParent extends StatefulWidget {
-  const MovableResizableInsideParent({super.key});
+  const MovableResizableInsideParent({super.key, required this.onTap});
+  final Function onTap;
 
   @override
   _MovableResizableInsideParentState createState() => _MovableResizableInsideParentState();
@@ -23,10 +26,14 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
     if (type == 'image') {
       final XFile? pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
       if (pickedFile == null) return;
+
+      final fileBytes = await pickedFile.readAsBytes(); // Convert to bytes
+
       setState(() {
         _items.add(MovableItem(
           type: 'image',
           mediaPath: pickedFile.path,
+          fileBytes: fileBytes, // Store fileBytes here
           width: 100,
           height: 100,
           posX: 50,
@@ -48,10 +55,14 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
     } else if (type == 'video') {
       final XFile? pickedFile = await _imagePicker.pickVideo(source: ImageSource.gallery);
       if (pickedFile == null) return;
+
+      final fileBytes = await pickedFile.readAsBytes(); // Convert to bytes
+
       setState(() {
         _items.add(MovableItem(
           type: 'video',
           mediaPath: pickedFile.path,
+          fileBytes: fileBytes, // Store fileBytes here
           width: 150,
           height: 150,
           posX: 50,
@@ -140,13 +151,23 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
             icon: const Icon(Icons.video_library),
             onPressed: () => _addItem('video'),
           ),
+          IconButton(
+            icon: const Icon(Icons.done),
+            onPressed: () {
+              // Convert _items list to JSON
+              final jsonList = _items.map((item) => item.toJson()).toList();
+              final jsonString = jsonEncode(jsonList);
+
+              widget.onTap(jsonString);
+            },
+          ),
         ],
       ),
       body: Center(
         child: Container(
           width: _parentWidth,
           height: _parentHeight,
-          color: Colors.green,
+          color: Colors.black,
           child: Stack(
             children: [
               for (int i = 0; i < _items.length; i++) _buildItem(_items[i], i),
@@ -173,7 +194,7 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
               height: item.height,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: isSelected ? Colors.orange : Colors.black,
+                  color: isSelected ? Colors.orange : Colors.white12,
                   width: isSelected ? 4 : 2,
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -183,7 +204,7 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
                       child: Text(
                         'Text',
                         style: TextStyle(
-                          color: Colors.black,
+                          color: Colors.white,
                           fontSize: 16,
                         ),
                       ),
@@ -213,16 +234,30 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
 class MovableItem {
   String type;
   String? mediaPath;
+  Uint8List? fileBytes; // Add fileBytes field to store the byte data
   double width, height, posX, posY;
 
   MovableItem({
     required this.type,
     this.mediaPath,
+    this.fileBytes,
     required this.width,
     required this.height,
     required this.posX,
     required this.posY,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'type': type,
+      'mediaPath': mediaPath,
+      'fileBytes': fileBytes != null ? base64Encode(fileBytes!) : null, // Base64 encoding for fileBytes
+      'width': width,
+      'height': height,
+      'posX': posX,
+      'posY': posY,
+    };
+  }
 }
 
 class VideoWidget extends StatefulWidget {
@@ -240,6 +275,7 @@ class _VideoWidgetState extends State<VideoWidget> {
   void initState() {
     super.initState();
     _controller = VideoPlayerController.file(File(widget.filePath))
+      ..setVolume(0)
       ..initialize().then((_) {
         setState(() {});
         _controller.play();
@@ -258,7 +294,9 @@ class _VideoWidgetState extends State<VideoWidget> {
     return _controller.value.isInitialized
         ? AspectRatio(
             aspectRatio: _controller.value.aspectRatio,
-            child: VideoPlayer(_controller),
+            child: VideoPlayer(
+              _controller,
+            ),
           )
         : const Center(child: CircularProgressIndicator());
   }
