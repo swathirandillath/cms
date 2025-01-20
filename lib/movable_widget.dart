@@ -21,6 +21,15 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
   int? _activeItemIndex;
 
   final ImagePicker _imagePicker = ImagePicker();
+  String convertFileToBase64(File file) {
+  try {
+    final bytes = file.readAsBytesSync(); // Read file as bytes
+    return base64Encode(bytes); // Convert to Base64 string
+  } catch (e) {
+    print("Error converting file to Base64: $e");
+    return '';
+  }
+}
 
   void _addItem(String type) async {
     if (type == 'image') {
@@ -33,7 +42,7 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
         _items.add(MovableItem(
           type: 'image',
           mediaPath: pickedFile.path,
-          fileBytes: fileBytes, // Store fileBytes here
+          fileBytes:base64Encode(fileBytes) , // Store fileBytes here
           width: 100,
           height: 100,
           posX: 50,
@@ -62,7 +71,7 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
         _items.add(MovableItem(
           type: 'video',
           mediaPath: pickedFile.path,
-          fileBytes: fileBytes, // Store fileBytes here
+          fileBytes:base64Encode(fileBytes), // Store fileBytes here
           width: 150,
           height: 150,
           posX: 50,
@@ -234,7 +243,7 @@ class _MovableResizableInsideParentState extends State<MovableResizableInsidePar
 class MovableItem {
   String type;
   String? mediaPath;
-  Uint8List? fileBytes; // Add fileBytes field to store the byte data
+  String? fileBytes; // Add fileBytes field to store the byte data
   double width, height, posX, posY;
 
   MovableItem({
@@ -251,7 +260,7 @@ class MovableItem {
     return {
       'type': type,
       'mediaPath': mediaPath,
-      'fileBytes': fileBytes != null ? base64Encode(fileBytes!) : null, // Base64 encoding for fileBytes
+      'fileBytes': fileBytes, // Base64 encoding for fileBytes
       'width': width,
       'height': height,
       'posX': posX,
